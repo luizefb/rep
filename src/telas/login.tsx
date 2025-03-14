@@ -21,7 +21,7 @@ const Login = ({ navigation }: any) => {
   };
 
   return (
-    <View style={{ flex: 1, justifyContent: "center", padding: 20 }}>
+    <View style={{ flex: 1, justifyContent: "center", padding: 20, bottom: 70 }}>
       <InputField label="Usuário" value={user} onChange={setUser} placeholder="Digite seu usuário" returnKeyType="next" onSubmitEditing={() => inputSenha.current?.focus()} />
       <InputField label="Senha" value={senha} onChange={setSenha} placeholder="Digite a senha" ref={inputSenha} returnKeyType="done" />
 
@@ -35,7 +35,7 @@ const Login = ({ navigation }: any) => {
 const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
-    top: 10
+    top: 15
   }
 })
 

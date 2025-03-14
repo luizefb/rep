@@ -8,11 +8,13 @@ const Coleta: React.FC = () => {
   const [endereco, setEndereco] = useState<string>('');
   const [numero, setNumero] = useState<string>('');
   const [bairro, setBairro] = useState<string>('');
+  const [cep, setCep] = useState<string>('');
   const [lixo, setLixo] = useState<string>('');
   
 
   const inputNumero = useRef<TextInput>(null);
   const inputBairro = useRef<TextInput>(null);
+  const inputCEP = useRef<TextInput>(null);
   const inputTipo = useRef<TextInput>(null);
 
   const data = [
@@ -30,17 +32,19 @@ const Coleta: React.FC = () => {
       endereco,
       numero,
       bairro,
+      cep,
       tipoLixo: lixo,
     };
 
     console.log(JSON.stringify(dadosFormulario, null, 2));
 
     /*temporario só pra testar */
-    Alert.alert('Dados do Formulário', `Endereço: ${endereco}\nNúmero: ${numero}\nBairro: ${bairro}\nTipo de Lixo: ${lixo}`);
+    Alert.alert('Dados do Formulário', `Endereço: ${endereco}\nNúmero: ${numero}\nBairro: ${bairro}\nCEP: ${cep}\nTipo de Lixo: ${lixo}`);
 
     setEndereco('');
     setNumero('');
     setBairro('');
+    setCep('');
     setLixo('');
   };
 
@@ -59,7 +63,8 @@ const Coleta: React.FC = () => {
         <View style={styles.form}>
           <InputField label="Endereço" value={endereco} onChange={setEndereco} placeholder="Digite a rua" returnKeyType="next" onSubmitEditing={() => inputNumero.current?.focus()} />
           <InputField label="Número" value={numero} onChange={setNumero} placeholder="Digite o número da sua residência" keyboardType="numeric" maxLength={8} ref={inputNumero} returnKeyType="next" onSubmitEditing={() => inputBairro.current?.focus()}  />
-          <InputField label="Bairro" value={bairro} onChange={setBairro} placeholder="Digite o bairro" ref={inputBairro } returnKeyType="next" onSubmitEditing={() => inputTipo.current?.focus()} />
+          <InputField label="Bairro" value={bairro} onChange={setBairro} placeholder="Digite o bairro" ref={inputBairro} returnKeyType="next" onSubmitEditing={() => inputCEP.current?.focus()} />
+          <InputField label="CEP" value={cep} onChange={setCep} placeholder="Digite o CEP" keyboardType="numeric" maxLength={8} ref={inputCEP} returnKeyType="done"/>
           <View style={styles.line} />
 
           <Text style={styles.textTitulo}>
@@ -95,7 +100,7 @@ const styles = StyleSheet.create({
   },
   topBar: {
     height: 60,
-    backgroundColor: '#597445',
+    backgroundColor: '#008a3b',
     justifyContent: 'center',
     alignItems: 'center',
     elevation: 5,
