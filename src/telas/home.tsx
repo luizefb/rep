@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View } from 'react-native';
 
 import SearchBar from '../componentes/search';
-import Mapa2 from '../componentes/mapa2';
+import MapaTeste from '../componentes/mapateste';
 
 
 function Home(): React.JSX.Element {
@@ -18,7 +18,7 @@ function Home(): React.JSX.Element {
     <View style={{ flex: 1 }}>
       <SearchBar value={search} onChange={searchTeste} />
 
-      <Mapa2 />
+      <MapaTeste />
     </View>
   );
 }

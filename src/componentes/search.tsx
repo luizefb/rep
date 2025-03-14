@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, TextInput, StyleSheet, TextInputProps } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+
 
 interface SearchBarProps {
   value: string;
@@ -10,7 +10,9 @@ interface SearchBarProps {
 const SearchBar: React.FC<SearchBarProps> = ({ value, onChange }) => {
   return (
     <View style={styles.container}>
-      <View style={styles.icon}/>
+      <View style={styles.icon}>
+      </View>
+
       <TextInput
         style={styles.input}
         placeholder="Pesquise sua rua aqui"
