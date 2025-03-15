@@ -1,15 +1,19 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
-import MapLibreGL, { MapView, Camera, PointAnnotation } from '@maplibre/maplibre-react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, Text, StyleSheet, ActivityIndicator, PermissionsAndroid, Platform } from 'react-native';
+import MapLibreGL, { MapView, Camera, PointAnnotation, CameraRef } from '@maplibre/maplibre-react-native';
+import Geolocation from '@react-native-community/geolocation';
+
+
+Geolocation.setRNConfiguration({
+    skipPermissionRequests: false,
+    authorizationLevel: 'whenInUse',
+    locationProvider: 'playServices',
+  });
 
 MapLibreGL.setAccessToken(null);
 const apiKey = 'e7036cbf-5614-48b5-8072-6d9fbe11c725';
 const styleUrl = `https://tiles.stadiamaps.com/styles/alidade_smooth.json?api_key=${apiKey}`;
 
-const regiaoInicial = {
-  latitude: -1.46366760474,
-  longitude: -48.490884461,
-};
 interface Local {
   latitude: number;
   longitude: number;
@@ -27,9 +31,48 @@ interface PontoFormatado {
 }
 
 const MapaTeste = () => {
-  const [carregando, setCarregando] = useState(true);
-  const [pontos, setPontos] = useState<PontoFormatado[]>([]);
-  const [info, setInfo] = useState<{ visible: boolean; tipo_lixo?: string }>({ visible: false });
+    const [carregando, setCarregando] = useState(true);
+    const [pontos, setPontos] = useState<PontoFormatado[]>([]);
+    const [info, setInfo] = useState<{ visible: boolean; tipo_lixo?: string }>({ visible: false });
+    const [localizacaoUsuario, setLocalizacaoUsuario] = useState<{ latitude: number; longitude: number } | null>(null);
+    const cameraRef = useRef<CameraRef>(null);
+
+    const solicitarPermissaoLocalizacao = async () => {
+    if (Platform.OS === 'android') {
+        const granted = await PermissionsAndroid.requestMultiple([
+            
+            PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+            PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION,
+            PermissionsAndroid.PERMISSIONS.ACCESS_BACKGROUND_LOCATION,
+        ]);
+
+        return (
+            granted['android.permission.ACCESS_FINE_LOCATION'] === PermissionsAndroid.RESULTS.GRANTED &&
+            granted['android.permission.ACCESS_BACKGROUND_LOCATION'] === PermissionsAndroid.RESULTS.GRANTED
+        );
+    }
+    return true;
+    };
+
+    const obterLocalizacaoUsuario = () => {
+        Geolocation.getCurrentPosition(
+        (posicao) => {
+            const { latitude, longitude } = posicao.coords;
+            setLocalizacaoUsuario({ latitude, longitude });
+
+            cameraRef.current?.setCamera({
+            centerCoordinate: [longitude, latitude],
+            zoomLevel: 16,
+            animationDuration: 1000,
+            });
+        },
+        (erro) => {
+            console.error('Erro ao obter localização:', erro.message);
+        },
+        { enableHighAccuracy: true, timeout: 20000, maximumAge: 1000 }
+        );
+    };
+  
 
   useEffect(() => {
     const carregarCoordenadas = async () => {
@@ -52,8 +95,26 @@ const MapaTeste = () => {
       }
     };
 
+    const inicializarLocalizacao = async () => {
+      const permissaoConcedida = await solicitarPermissaoLocalizacao();
+      if (permissaoConcedida) {
+        obterLocalizacaoUsuario();
+      } else {
+        console.warn('Permissão de localização negada.');
+      }
+    };
+
     carregarCoordenadas();
+    inicializarLocalizacao();
   }, []);
+
+  const informacao = (tipo: string) => {
+    setInfo({ visible: true, tipo_lixo: tipo });
+  };
+
+  const fecharInformacao = () => {
+    setInfo({ visible: false });
+  };
 
   if (carregando) {
     return (
@@ -64,19 +125,12 @@ const MapaTeste = () => {
     );
   }
 
-  const informacao = (tipo: string) => {
-    setInfo({ visible: true, tipo_lixo: tipo });
-  };
-
-  const fecharInformacao = () => {
-    setInfo({ visible: false });
-  };
-
   return (
     <View style={styles.container}>
       <MapView style={styles.map} mapStyle={styleUrl}>
         <Camera
-          centerCoordinate={[regiaoInicial.longitude, regiaoInicial.latitude]}
+          ref={cameraRef}
+          centerCoordinate={localizacaoUsuario ? [localizacaoUsuario.longitude, localizacaoUsuario.latitude] : [-48.490884461, -1.46366760474]}
           zoomLevel={16}
         />
         
@@ -91,6 +145,15 @@ const MapaTeste = () => {
             <Text style={styles.marker}>📍</Text>
           </PointAnnotation>
         ))}
+
+        {localizacaoUsuario && (
+          <PointAnnotation
+            id="usuario"
+            coordinate={[localizacaoUsuario.longitude, localizacaoUsuario.latitude]}
+          >
+            <View style={styles.markerUsuario} />
+          </PointAnnotation>
+        )}
       </MapView>
 
       {info.visible && (
@@ -120,10 +183,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   marker: {
-    fontSize: 30, // Tamanho do emoji
+    fontSize: 30, 
     textShadowColor: 'rgba(0, 0, 0, 0.5)', 
     textShadowOffset: { width: 1, height: 1 }, 
     textShadowRadius: 2,
+  },
+  markerUsuario: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: 'blue', 
+    borderWidth: 2,
+    borderColor: 'white',
   },
   infoContainer: {
     position: 'absolute',
