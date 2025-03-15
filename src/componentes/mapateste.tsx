@@ -10,25 +10,41 @@ const regiaoInicial = {
   latitude: -1.46366760474,
   longitude: -48.490884461,
 };
+interface Local {
+  latitude: number;
+  longitude: number;
+}
+
+interface PontoColeta {
+  tipo_lixo: string;
+  locais: Local[];
+}
+
+interface PontoFormatado {
+  latitude: number;
+  longitude: number;
+  tipo_lixo: string;
+}
 
 const MapaTeste = () => {
   const [carregando, setCarregando] = useState(true);
-  const [coordenadasExternas, setCoordenadasExternas] = useState<{ latitude: number; longitude: number }[]>([]);
-  const [info, setInfo] = useState(false);
+  const [pontos, setPontos] = useState<PontoFormatado[]>([]);
+  const [info, setInfo] = useState<{ visible: boolean; tipo_lixo?: string }>({ visible: false });
 
   useEffect(() => {
-    const carregarCoordenadas = () => {
+    const carregarCoordenadas = async () => {
       try {
-        // Importar o arquivo JSON diretamente da pasta src/dados
-        const dados = require('../dados/dados.json'); // Caminho relativo ao arquivo atual
+        const dados: PontoColeta[] = require('../dados/dados.json');
 
-        // Converter coordenadas para números (caso sejam strings)
-        const coordenadasNumericas = dados.map((ponto: { latitude: string; longitude: string }) => ({
-          latitude: parseFloat(ponto.latitude),
-          longitude: parseFloat(ponto.longitude),
-        }));
+        const pontosFormatados: PontoFormatado[] = dados.flatMap((tipo) => 
+          tipo.locais.map((local) => ({
+            latitude: local.latitude,
+            longitude: local.longitude,
+            tipo_lixo: tipo.tipo_lixo,
+          }))
+        );
 
-        setCoordenadasExternas(coordenadasNumericas);
+        setPontos(pontosFormatados);
         setCarregando(false);
       } catch (error) {
         console.error('Erro ao carregar o JSON:', error);
@@ -48,8 +64,12 @@ const MapaTeste = () => {
     );
   }
 
-  const informacao = () => {
-    setInfo(!info);
+  const informacao = (tipo: string) => {
+    setInfo({ visible: true, tipo_lixo: tipo });
+  };
+
+  const fecharInformacao = () => {
+    setInfo({ visible: false });
   };
 
   return (
@@ -60,10 +80,10 @@ const MapaTeste = () => {
           zoomLevel={16}
         />
         
-        {coordenadasExternas.map((ponto, index) => (
+        {pontos.map((ponto, index) => (
           <PointAnnotation
-            onSelected={informacao}
-            onDeselected={informacao}
+            onSelected={() => informacao(ponto.tipo_lixo)}
+            onDeselected={fecharInformacao}
             key={`ponto-${index}`}
             id={`ponto-${index}`}
             coordinate={[ponto.longitude, ponto.latitude]}
@@ -73,11 +93,11 @@ const MapaTeste = () => {
         ))}
       </MapView>
 
-      {info && (
+      {info.visible && (
         <View style={styles.infoContainer}>
           <Text style={styles.infoText}>
             Ponto de coleta de Lixo {'\n'}
-            *informações adicionais*
+            Tipo: {info.tipo_lixo}
           </Text>
         </View>
       )}
@@ -101,9 +121,9 @@ const styles = StyleSheet.create({
   },
   marker: {
     fontSize: 30, // Tamanho do emoji
-    textShadowColor: 'rgba(0, 0, 0, 0.5)', // Sombra para melhorar a visibilidade
-    textShadowOffset: { width: 1, height: 1 }, // Deslocamento da sombra
-    textShadowRadius: 2, // Raio da sombra
+    textShadowColor: 'rgba(0, 0, 0, 0.5)', 
+    textShadowOffset: { width: 1, height: 1 }, 
+    textShadowRadius: 2,
   },
   infoContainer: {
     position: 'absolute',
