@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
+import { Provider } from 'react-redux';
 import { View } from 'react-native';
+import store from '../redux/store';
+import MapaReal from '../componentes/mapaReal';
 
 import SearchBar from '../componentes/search';
 import MapaTeste from '../componentes/mapateste';
@@ -15,11 +18,9 @@ function Home(): React.JSX.Element {
   };
 
   return (
-    <View style={{ flex: 1 }}>
-      <SearchBar value={search} onChange={searchTeste} />
-
-      <MapaTeste />
-    </View>
+    <Provider store={store}>
+      <MapaReal />
+    </Provider>
   );
 }
 
